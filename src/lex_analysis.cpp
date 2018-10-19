@@ -2,12 +2,7 @@
 // Created by Azure on 10/18/2018.
 //
 
-#include <iostream>
-#include <fstream>
-#include <exception>
-#include <algorithm>
-
-#include "lex_analysis.h"
+#include "lex_public.h"
 #include "lex_private.h"
 
 using namespace std;
@@ -17,7 +12,8 @@ using namespace std;
  */
 
 char curChar;
-int lineNum;
+int lineNum; int charNum;
+vector<Token> lexed_file;
 
 /*
  * Functions
@@ -33,12 +29,28 @@ int lex_process_file(char* name){
     int wordlen = 0;
 
     while (file.get(curChar)) {
+        charNum++;
 
         // ===== { PRELIMINARY ERROR HANDLING } =====
 
+        //handle empty
+        if ( curChar == '\000' && lineNum == 0) {
+            sprintf(printData, "File %s is empty! Exiting...", name);
+            print();
+            return -1;
+        } else if ( curChar == '\000' ) {
+            sprintf(printData, "Done parsing %s!", name);
+            print();
+            return 0;
+        }else {
+            lineNum = 1;
+        }
+
         // newlines
-        if (curChar == '\n')
+        if (curChar == '\n') {
             lineNum++;
+            charNum == 0;
+        }
 
         // comments
         if (curChar == '/') {
@@ -55,72 +67,152 @@ int lex_process_file(char* name){
         if (isalnum(curChar)){
             tempstr[wordlen] = curChar;
             wordlen++;
-            if (wordlen > 100)
-                printf("ERROR! Word %s on line %d is too long! Rename and try again!\n", tempstr, lineNum);
-        } else if (isspace(curChar) || isExAcceptableChar(curChar)){
+            if (wordlen > 100) {
+                sprintf(printData, "ERROR! Word %s on line %d is too long! Rename and try again!", tempstr, lineNum);
+                print();
+            }
+        } else if (!isalnum(curChar)){
             wordlen = 0;
         } else {
-            printf("Invalid character '%c' at line %d.\n", curChar, lineNum);
+            sprintf(printData, "Invalid character '%c' at line %d.", curChar, lineNum);
+            print();
         }
 
 
         // ===== { LEXER BEGIN } =====
 
         // Letter
-        if (isalpha(curChar)){
-            tempWord.push_back(curChar);
-            while (file.get(curChar) && isalpha(curChar)) {
-                tempWord.push_back(curChar);
+        if (isalpha(curChar)) {
+            tempWord[wordI] = curChar;
+            wordI++;
+            while (isalpha(file.peek())) {
+                file.get(curChar);
+                tempWord[wordI] = curChar;
+                wordI++;
             }
 
             // Check if identifier or keyword
-            if (isKeyword(&tempWord[0])){
-                Token word {
-                    KEYWORD, &tempWord[0]
+            string tempFull(tempWord);
+            if (isKeyword(tempWord)) {
+                Token word{
+                        KEYWORD, tempFull
                 };
                 lexed_file.push_back(word);
             } else {
-                Token word {
-                    IDENTIFIER, &tempWord[0]
+                Token word{
+                        IDENTIFIER, tempFull
                 };
                 lexed_file.push_back(word);
             }
-            tempWord.clear();
+
+            memset(tempWord, 0, sizeof tempWord);
+            tempFull.erase(); wordI = 0;
 
 
         // Number
-        } else if (isdigit(curChar)){
-            tempNum.push_back(curChar);
-            while (file.get(curChar) && isdigit(curChar)) {
-                tempWord.push_back(curChar);
-            };
-            Token num {
-                NUMBER, &tempNum[0]
+        } else if (isdigit(curChar)) {
+            tempWord[wordI] = curChar;
+            wordI++;
+            while (isdigit(file.peek())) {
+                file.get(curChar);
+                tempWord[wordI] = curChar;
+                wordI++;
+            }
+
+            string tempFull(tempWord);
+            Token num{
+                    NUMBER, tempFull
             };
             lexed_file.push_back(num);
-            tempWord.clear();
+
+            memset(tempWord, 0, sizeof tempWord);
+            tempFull.clear(); wordI = 0;
+
+
+        // String
+        } else if (curChar == '"') {
+            while (file.peek() != '"') {
+                file.get(curChar);
+                tempWord[wordI] = curChar;
+                wordI++;
+            }
+
+            //skip last "
+            file.get(curChar);
+
+            string tempFull(tempWord);
+            Token str {
+                    STRING, tempFull
+            };
+            lexed_file.push_back(str);
+
+            memset(tempWord, 0, sizeof tempWord);
+            tempFull.clear(); wordI = 0;
 
 
         // Punctuation
         } else if (ispunct(curChar)) {
+            // Delimiter
             if (isDelim(curChar)){
                 Token delim {
-                    DELIM, &curChar
+                    DELIM, string(1, curChar)
                 };
                 lexed_file.push_back(delim);
+
+            // Other Operator
             } else if (isOtherOp(curChar)) {
-                Token other {
-                    OP, &curChar
+                Token other{
+                        OP, string(1, curChar)
                 };
                 lexed_file.push_back(other);
+
+            // Logic Operator
+            } else if (isLogic(curChar)) {
+                tempWord[wordI] = curChar;
+                if (file.peek() == '&' || file.peek() == '|' ) {
+                    wordI++; file.get(curChar);
+                    tempWord[wordI] = curChar;
+                }
+
+                string tempFull(tempWord);
+                Token logic {
+                        LOGIC, tempFull
+                };
+                lexed_file.push_back(logic);
+
+                memset(tempWord, 0, sizeof tempWord);
+                tempFull.clear(); wordI = 0;
+
+            // Relational Operator
+            } else if (startsRelOp(curChar)) {
+                tempWord[wordI] = curChar;
+                wordI++;
+                if (file.peek() == '=') {
+                    file.get(curChar);
+                    tempWord[wordI] = curChar;
+                }
+
+                string tempFull(tempWord);
+                if (strcmp(tempWord, "=") == 0) {
+                    Token num{
+                        ASSIGN, tempFull
+                    };
+                    lexed_file.push_back(num);
+                } else {
+                    Token num{
+                        REL_OP, tempFull
+                    };
+                    lexed_file.push_back(num);
+                }
+
+                memset(tempWord, 0, sizeof tempWord);
+                tempFull.clear(); wordI = 0;
+            } else {
+                sprintf(printData,"Unexpected Character in %s at %d:%d", name, lineNum, charNum);
+                print();
+                return -1;
             }
         }
-    }
-
-    //handle empty
-    if ( curChar == NULL) {
-        printf("File %s is empty! Exiting...", name);
-        return -1;
     }
 
     return 0;

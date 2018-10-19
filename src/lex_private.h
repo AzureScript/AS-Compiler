@@ -5,38 +5,13 @@
 #ifndef AZURESCRIPT_LEX_PRIVATE_H
 #define AZURESCRIPT_LEX_PRIVATE_H
 
-#include <string>
-#include <vector>
-#include <string.h>
-
-using std::string;
-using std::vector;
-
-    /*
-     * Typedefs
-     */
-
-typedef enum {
-    IDENTIFIER,
-    KEYWORD,
-    NUMBER,
-    REL_OP, 	// such as ==  <  >  =!=    =>  =<
-    OP,			// such as = :  +  -  *  / %
-    DELIM,		// such as . (  ) , { } ; [ ]
-    UNDEF,		// undefined
-    EOT 		// end of token
-} TokenType;
-
-typedef struct {
-    TokenType tokenType;
-    char* value;
-} Token;
+#ifndef AZURESCRIPT_COMMON_H
+#include "common.h"
+#endif
 
     /*
      * Constants
      */
-
-vector<Token> lexed_file;
 
 // Keyword list
 char const *keywords[] = {
@@ -45,7 +20,7 @@ char const *keywords[] = {
 
 // RelOps
 char const *relOps[] = {
-        "==", "<", ">", "!=", "=>", "=<"
+        "==", "<", ">", "!=", "<=", ">="
 };
 
 // Other Ops
@@ -54,12 +29,9 @@ char const otherOps[] = {':', '+', '-', '*', '/', '%'};
 // Delims
 char const delims[] = {'.', '(', ')', ',', '{', '}', ';', '[', ']'};
 
-
 // Temporary vars
-
-vector<char> tempWord;
-vector<char> tempNum;
-vector<char> tempKey;
+char tempWord[100];
+int wordI = 0;
 
 
 
@@ -80,10 +52,19 @@ int isExAcceptableChar(char c) {
     }
 }
 
-int isRelOp(char c) {
+int startsRelOp(char c) {
     int i;
     int result = 0; // false
     if (c == '=' || c == '<' || c == '>') {
+        result = 1;
+    }
+    return result;
+}
+
+int isLogic(char c) {
+    int i;
+    int result = 0; // false
+    if (c == '&' || c == '|' || c == '!') {
         result = 1;
     }
     return result;
@@ -118,7 +99,5 @@ int isKeyword(char *str) {
     }
     return result;
 }
-
-
 
 #endif //AZURESCRIPT_LEX_PRIVATE_H

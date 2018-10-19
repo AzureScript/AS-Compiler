@@ -3,30 +3,42 @@
  *  Copyright (c) 2018 Andrew Augustine
  */
 
-#include <fstream>
-
-#include "lex_analysis.h"
+#include "common.h"
+#include "lex_public.h"
 
 using namespace std;
 
+char printData[];
+
+void print(){
+    cout << printData << endl;
+    memset(printData, 0, sizeof printData);
+}
+
 int main(int argc, char* argv[]) {
-    printf("\n=====[ AzureScript Compiler v0.1.0 ]=====\n\n");
+    sprintf(printData, "\n=====[ AzureScript Compiler v0.1.0 ]=====\n");
+    print();
 
     // Initial Switch
     switch (argc){
         case 1:
-            printf("No file Specified!");
+            sprintf(printData, "No file Specified!");
+            print();
             return -1;
         case 2:
-            printf("Entrypoint: %s", argv[1]);
+            sprintf(printData, "Entrypoint: %s", argv[1]);
+            print();
             break;
         default:
-            printf("Syntax: \nCompiler [File]");
+            sprintf(printData, "Syntax: \nCompiler [File]");
+            print();
             break;
     }
 
     // Start Lexical Analysis
-    lex_main(argv[1]);
+    if (lex_main(argv[1]) != 0){
+        return -1;
+    }
 
     return 0;
 }
