@@ -14,6 +14,8 @@
 
 #include <string.h>
 
-using namespace std;
+extern char printData[100];
+
+extern void print();
 
 #endif //AZURESCRIPT_COMMON_H

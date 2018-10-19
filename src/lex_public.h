@@ -17,23 +17,26 @@ typedef enum {
     IDENTIFIER,
     KEYWORD,
     NUMBER,
-    REL_OP, 	// such as ==  <  >  =!=    =>  =<
-    OP,			// such as = :  +  -  *  / %
+    STRING,
+    ASSIGN,     // such as =
+    OP,			// such as :  +  -  *  / %
+    REL_OP, 	// such as ==  <  >  !=  <=  >=
     DELIM,		// such as . (  ) , { } ; [ ]
+    LOGIC,		// such as && || !
     UNDEF,		// undefined
     EOT 		// end of token
 } TokenType;
 
 typedef struct {
     TokenType tokenType;
-    string value;
+    std::string value;
 } Token;
 
 /*
  * Public Vars
  */
 
-extern vector<Token> lexed_file;
+extern std::vector<Token> lexed_file;
 
 /*
  * Functions

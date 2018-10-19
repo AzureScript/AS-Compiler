@@ -20,7 +20,7 @@ char const *keywords[] = {
 
 // RelOps
 char const *relOps[] = {
-        "==", "<", ">", "!=", "=>", "=<"
+        "==", "<", ">", "!=", "<=", ">="
 };
 
 // Other Ops
@@ -29,15 +29,11 @@ char const otherOps[] = {':', '+', '-', '*', '/', '%'};
 // Delims
 char const delims[] = {'.', '(', ')', ',', '{', '}', ';', '[', ']'};
 
-
 // Temporary vars
-
-vector<string> words;
 char tempWord[100];
 int wordI = 0;
 
-vector<char> tempNum;
-vector<char> tempKey;
+
 
 
     /*
@@ -56,10 +52,19 @@ int isExAcceptableChar(char c) {
     }
 }
 
-int isRelOp(char c) {
+int startsRelOp(char c) {
     int i;
     int result = 0; // false
     if (c == '=' || c == '<' || c == '>') {
+        result = 1;
+    }
+    return result;
+}
+
+int isLogic(char c) {
+    int i;
+    int result = 0; // false
+    if (c == '&' || c == '|' || c == '!') {
         result = 1;
     }
     return result;
