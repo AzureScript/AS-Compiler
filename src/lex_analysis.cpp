@@ -2,15 +2,8 @@
 // Created by Azure on 10/18/2018.
 //
 
-#include <iostream>
-#include <fstream>
-#include <exception>
-#include <algorithm>
-
-#include "lex_analysis.h"
+#include "lex_public.h"
 #include "lex_private.h"
-
-using namespace std;
 
 /*
  * Constants
@@ -18,6 +11,7 @@ using namespace std;
 
 char curChar;
 int lineNum;
+vector<Token> lexed_file;
 
 /*
  * Functions
@@ -67,59 +61,70 @@ int lex_process_file(char* name){
         // ===== { LEXER BEGIN } =====
 
         // Letter
-        if (isalpha(curChar)){
-            tempWord.push_back(curChar);
+        if (isalpha(curChar)) {
+            tempWord[wordI] = curChar;
+            wordI++;
             while (file.get(curChar) && isalpha(curChar)) {
-                tempWord.push_back(curChar);
+                tempWord[wordI] = curChar;
+                wordI++;
             }
 
             // Check if identifier or keyword
-            if (isKeyword(&tempWord[0])){
-                Token word {
-                    KEYWORD, &tempWord[0]
+            string tempFull(tempWord);
+            if (isKeyword(tempWord)) {
+                Token word{
+                        KEYWORD, tempFull
                 };
                 lexed_file.push_back(word);
             } else {
-                Token word {
-                    IDENTIFIER, &tempWord[0]
+                Token word{
+                        IDENTIFIER, tempFull
                 };
                 lexed_file.push_back(word);
             }
-            tempWord.clear();
+
+            memset(tempWord, 0, sizeof tempWord);
+            tempFull.erase(); wordI = 0;
 
 
         // Number
         } else if (isdigit(curChar)){
-            tempNum.push_back(curChar);
-            while (file.get(curChar) && isdigit(curChar)) {
-                tempWord.push_back(curChar);
-            };
+            tempWord[wordI] = curChar;
+            wordI++;
+            while (file.get(curChar) && isalpha(curChar)) {
+                tempWord[wordI] = curChar;
+                wordI++;
+            }
+
+            string tempFull(tempWord);
             Token num {
-                NUMBER, &tempNum[0]
+                NUMBER, tempFull
             };
             lexed_file.push_back(num);
-            tempWord.clear();
+
+            memset(tempWord, 0, sizeof tempWord);
+            tempFull.clear(); wordI = 0;
 
 
         // Punctuation
-        } else if (ispunct(curChar)) {
-            if (isDelim(curChar)){
-                Token delim {
-                    DELIM, &curChar
-                };
-                lexed_file.push_back(delim);
-            } else if (isOtherOp(curChar)) {
-                Token other {
-                    OP, &curChar
-                };
-                lexed_file.push_back(other);
-            }
+//        } else if (ispunct(curChar)) {
+//            if (isDelim(curChar)){
+//                Token delim {
+//                    DELIM, &curChar
+//                };
+//                lexed_file.push_back(delim);
+//            } else if (isOtherOp(curChar)) {
+//                Token other {
+//                    OP, &curChar
+//                };
+//                lexed_file.push_back(other);
+//            }
         }
     }
 
     //handle empty
-    if ( curChar == NULL) {
-        printf("File %s is empty! Exiting...", name);
+    if ( curChar == '\000' ) {
+        printf("File %s is empty! Exiting...\n", name);
         return -1;
     }
 

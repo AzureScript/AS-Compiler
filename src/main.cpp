@@ -3,9 +3,8 @@
  *  Copyright (c) 2018 Andrew Augustine
  */
 
-#include <fstream>
-
-#include "lex_analysis.h"
+#include "common.h"
+#include "lex_public.h"
 
 using namespace std;
 
@@ -18,7 +17,7 @@ int main(int argc, char* argv[]) {
             printf("No file Specified!");
             return -1;
         case 2:
-            printf("Entrypoint: %s", argv[1]);
+            printf("Entrypoint: %s \n", argv[1]);
             break;
         default:
             printf("Syntax: \nCompiler [File]");
